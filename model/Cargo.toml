@@ -1,0 +1,9 @@
+[package]
+name = "model"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { version = "1.0.229", features = ["derive"] }
+regex = "1.13.1"
+os_info = "3.15.0"

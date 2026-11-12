@@ -1,0 +1,10 @@
+[package]
+name = "parse"
+edition = "2024"
+version.workspace = true
+
+[dependencies]
+model = { path = "../model" }
+
+serde_json = "1.0.154"
+quick-xml = { version = "0.42.0", features = ["serialize", "overlapped-lists"]}

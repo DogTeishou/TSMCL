@@ -1,0 +1,8 @@
+[package]
+name = "auth"
+edition = "2024"
+version.workspace = true
+
+[dependencies]
+md5 = "0.8.1"
+uuid = { version = "1.28.0", features = ["v3"] }

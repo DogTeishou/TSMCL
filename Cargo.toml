@@ -1,0 +1,15 @@
+[workspace]
+members = [
+    "auth",
+    "download",
+    "http_downloader",
+    "lauch",
+    "main",
+    "model", 
+    "parse",
+]
+resolver = "3"
+name = "tsmcl"
+
+[workspace.package]
+version = "0.0.3-alpha"

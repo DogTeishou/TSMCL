@@ -1,0 +1,13 @@
+[package]
+name = "lauch"
+edition = "2024"
+version.workspace = true
+
+[dependencies]
+thiserror = "2.0.21"
+serde_json = "1.0.154"
+zip = "9.0.5"
+
+auth = { path = "../auth" }
+model = { path = "../model" }
+parse = { path = "../parse" }
