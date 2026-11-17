@@ -1,0 +1,13 @@
+[package]
+name = "main"
+edition = "2024"
+version.workspace = true
+
+[dependencies]
+tokio = { version = "1.54.1", features = ["full"] }
+gpui-kit = "0.10.0"
+
+launch = { path = "../launch" }
+download = { path = "../download" }
+model = { path = "../model" }
+parse = { path = "../parse" }
