@@ -10,20 +10,20 @@ impl BuildTasks for AssetsIndex {
     async fn build_tasks(&self, downloader: &Downloader, source: &Source, game_dir: &Path) -> Result<(), Error> {
         let indexes_dir = &game_dir.join("assets").join("indexes");
         if !indexes_dir.exists() {
-            tokio::fs::create_dir_all(&indexes_dir).await.map_err(|e| Error::IoError(e))?;
+            tokio::fs::create_dir_all(&indexes_dir).await?;
         }
 
         let index_path = &indexes_dir.join(format!("{}.json", self.id));
-        tokio::fs::File::create(index_path).await.map_err(|e| Error::IoError(e))?;
+        tokio::fs::File::create(index_path).await?;
         let url = self.url.clone();
-        let text = get(url).await.map_err(|e| Error::HttpDownloaderError(e))?;
-        let index = Index::parse(&text).map_err(|e| Error::SerdeJsonError(e))?;
-        let text = serde_json::to_string_pretty(&index).map_err(|e| Error::SerdeJsonError(e))?;
-        tokio::fs::write(index_path, &text).await.map_err(|e| Error::IoError(e))?;
+        let text = get(url).await?;
+        let index = Index::parse(&text)?;
+        let text = serde_json::to_string_pretty(&index)?;
+        tokio::fs::write(index_path, &text).await?;
 
         let objects_dir = &game_dir.join("assets").join("objects");
         if !objects_dir.exists() {
-            tokio::fs::create_dir_all(&objects_dir).await.map_err(|e| Error::IoError(e))?;
+            tokio::fs::create_dir_all(&objects_dir).await?;
         }
         
         for (_, value) in index.objects {
@@ -32,11 +32,11 @@ impl BuildTasks for AssetsIndex {
 
             let first_two_dir = &objects_dir.join(hash_first_two);
             if !first_two_dir.exists() {
-                tokio::fs::create_dir_all(first_two_dir).await.map_err(|e| Error::IoError(e))?;
+                tokio::fs::create_dir_all(first_two_dir).await?;
             }
 
             if !first_two_dir.exists() {
-                tokio::fs::create_dir_all(first_two_dir).await.map_err(|e| Error::IoError(e))?;
+                tokio::fs::create_dir_all(first_two_dir).await?;
             }
 
             let path = &first_two_dir.join(&hash);
@@ -44,7 +44,7 @@ impl BuildTasks for AssetsIndex {
                 if verify(hash, path).await {
                     continue;
                 } else {
-                    tokio::fs::remove_file(path).await.map_err(|e| Error::IoError(e))?;
+                    tokio::fs::remove_file(path).await?;
                 }
             }
 

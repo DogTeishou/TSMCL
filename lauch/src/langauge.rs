@@ -12,8 +12,7 @@ impl Lang {
         match self {
             ZhCn => { String::from("zh_cn") },
             EnUs => { String::from("en_us") },
-            JpJa => { String::from("jp_ja") }
-            _ => { String::from("en_us") }
+            JpJa => { String::from("jp_ja") },
         }
     }
 }

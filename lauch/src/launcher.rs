@@ -83,6 +83,11 @@ impl Launcher {
         child.wait()
     }
 
+    pub fn change_player(&mut self, player: &Player) -> &mut Self {
+        self.player = player.clone();
+        self
+    }
+
     pub fn run(&mut self) -> Result<Child, Error> {
         let version = self.get_version_json()?;
         self.extract_natives(&version)?;
@@ -140,12 +145,7 @@ impl Launcher {
             self.replace_game(&v, version)
         }).collect();
 
-        for v in &mut vec {
-            if v.starts_with("-Djava.library.path=") {
-                let natives_dir = self.version_dir.join("natives");
-                *v = format!("-Djava.library.path={}", natives_dir.to_string_lossy());
-            }
-        }
+        set_native_library_path(&mut vec, &self.version_dir.join("natives"));
         vec
     }
 
@@ -197,27 +197,23 @@ impl Launcher {
         if option_path.exists() {
             return Ok(());
         }
-        let mut file = std::fs::File::create(option_path).map_err(|e| Error::IoError(e))?;
+        let mut file = std::fs::File::create(option_path)?;
         
         let initial_options = format!("lang:{}\n", self.lang.get_str());
-        file.write_all(initial_options.as_bytes()).map_err(|e| Error::IoError(e))?;
-        file.flush().map_err(|e| Error::IoError(e))?;
+        file.write_all(initial_options.as_bytes())?;
+        file.flush()?;
         
         Ok(())
     }
 
     fn get_version_json(&self) -> Result<Version, Error> {
-        let version_json_name = if let Some(name) = self.version_dir.file_name(){
-            if let Some(name) = name.to_str() {
-                Ok(name)
-            } else {
-                Err(Error::IoError(std::io::Error::new(std::io::ErrorKind::InvalidFilename, "get file name failed")))
-            }
+        let version_json_name = if let Some(name) = self.version_dir.file_name() {
+            name.to_string_lossy().to_string()
         } else {
-            Err(Error::IoError(std::io::Error::new(std::io::ErrorKind::InvalidFilename, "get file name failed")))
-        }?;
+            String::new()
+        };
         let version_json_path = &self.version_dir.join(format!("{}.json", version_json_name));
-        let string = std::fs::read_to_string(version_json_path).map_err(|e| Error::IoError(e))?;
+        let string = std::fs::read_to_string(version_json_path)?;
         Version::parse(&string).map_err(|e| Error::SerdeJsonError(e))
     }
 
@@ -258,27 +254,17 @@ impl Launcher {
 
         let mut text= string.to_string();
 
-        if string.contains("${natives_directory}") {
-            text = string.replace("${natives_directory}", &*hash_map["${natives_directory}"]);
-        } else if string.contains("${launcher_name}") {
-            text = string.replace("${launcher_name}", &*hash_map["${launcher_name}"]);
-        } else if string.contains("${launcher_version}") {
-            text = string.replace("${launcher_version}", &*hash_map["${launcher_version}"]);
-        } else if string.contains("${classpath}") {
-            text = string.replace("${classpath}", &*hash_map["${classpath}"]);
-        } else if string.contains("-Xms2G") {
-            text = string.replace("-Xms2G", &*hash_map["-Xms2G"]);
-        } else if string.contains("-Xmx4G") {
-            text = string.replace("-Xmx4G", &*hash_map["-Xmx4G"]);
-        } else if string.contains("${library_directory}") {
-            text = string.replace("${library_directory}", &*hash_map["${library_directory}"]);
+        for (k, v) in &hash_map {
+            if string.contains(k) {
+                text = string.replace(k, v);
+            }
         }
 
         text
     }
 
     fn replace_game(&self, string: &str, version: &Version) -> String {
-        let game_dir = &self.version_dir.parent().unwrap().parent().unwrap().to_path_buf();
+        let game_dir = &self.version_dir.parent().unwrap_or(Path::new("")).parent().unwrap_or(Path::new("")).to_path_buf();
         let game_name = &self.version_dir.to_string_lossy().to_string();
         let mut run_dir = game_dir;
         if self.is_iso {
@@ -328,7 +314,10 @@ impl Launcher {
     fn replace_old(&self, string: &String, version: &Version) -> String {
         let mut text = string.clone();
         let mut hash_map = HashMap::new();
-        let game_dir = self.version_dir.parent().unwrap().parent().unwrap();
+        let game_dir = self.version_dir.parent()
+            .unwrap_or(Path::new(""))
+            .parent()
+            .unwrap_or(Path::new(""));
         let mut run_dir = game_dir.to_string_lossy().to_string();
         if self.is_iso {
             run_dir = self.version_dir.to_string_lossy().to_string();
@@ -360,7 +349,7 @@ impl Launcher {
         let libraries_dir = self.version_dir.parent().unwrap().parent().unwrap().join("libraries");
         let natives_dir = self.version_dir.join("natives");
         if !natives_dir.exists() {
-            std::fs::create_dir_all(&natives_dir).map_err(|e| Error::IoError(e))?;
+            std::fs::create_dir_all(&natives_dir)?;
         }
 
     
@@ -369,33 +358,85 @@ impl Launcher {
                 Library::Normal(normal_library) => normal_library,
                 Library::Fabric(_) => continue,
             };
-            if lib.allowed() && lib.name.contains("natives") {
-                extract_jar(
-                    &libraries_dir.join(&lib.downloads.artifact.as_ref().unwrap().path),
-                    &natives_dir,
-                )?;
-                if let Some(native) = &lib.get_natives() {
-                    if let Some(classifiers) = &lib.downloads.classifiers {
-                        let di = &classifiers[native];
-                        extract_jar(
-                            &libraries_dir.join(&di.path),
-                            &natives_dir,
-                        )?;
-                    }
-                }
+            if !lib.allowed() {
+                continue;
+            }
+            for native in native_artifacts(lib) {
+                extract_jar(&libraries_dir.join(&native.path), &natives_dir)?;
             }
         }
         Ok(())
     }
 }
 
+fn set_native_library_path(args: &mut Vec<String>, natives_dir: &Path) {
+    let native_path = format!("-Djava.library.path={}", natives_dir.to_string_lossy());
+    let mut found = false;
+    for arg in args.iter_mut() {
+        if arg.starts_with("-Djava.library.path=") {
+            *arg = native_path.clone();
+            found = true;
+        }
+    }
+    if !found {
+        args.insert(0, native_path);
+    }
+}
+
+fn native_artifacts(library: &model::NormalLibrary) -> Vec<&model::DownloadItem> {
+    let mut artifacts = Vec::new();
+    if library.name.contains("natives")
+        && let Some(artifact) = &library.downloads.artifact
+    {
+        artifacts.push(artifact);
+    }
+    if let Some(native) = library.get_natives()
+        && let Some(artifact) = library
+            .downloads
+            .classifiers
+            .as_ref()
+            .and_then(|classifiers| classifiers.get(&native))
+    {
+        artifacts.push(artifact);
+    }
+    artifacts
+}
+
+#[cfg(test)]
+mod tests {
+    use super::set_native_library_path;
+    use std::path::Path;
+
+    #[test]
+    fn adds_native_path_for_legacy_versions() {
+        let mut args = vec!["-Xmx4G".to_string(), "net.minecraft.launchwrapper.Launch".to_string()];
+
+        set_native_library_path(&mut args, Path::new("natives"));
+
+        assert_eq!(args[0], "-Djava.library.path=natives");
+    }
+
+    #[test]
+    fn replaces_existing_native_path() {
+        let mut args = vec![
+            "-Djava.library.path=old".to_string(),
+            "net.minecraft.client.main.Main".to_string(),
+        ];
+
+        set_native_library_path(&mut args, Path::new("natives"));
+
+        assert_eq!(args[0], "-Djava.library.path=natives");
+        assert_eq!(args.len(), 2);
+    }
+}
+
 fn extract_jar(jar: &Path, dir: &Path) -> Result<(), Error> {
-    let mut archive = ZipArchive::new(std::fs::File::open(jar).map_err(|e| Error::IoError(e))?).map_err(|e| Error::ZipError(e))?;
-    std::fs::create_dir_all(dir).map_err(|e| Error::IoError(e))?;
+    let mut archive = ZipArchive::new(std::fs::File::open(jar)?)?;
+    std::fs::create_dir_all(dir)?;
 
     for i in 0..archive.len() {
-        let mut entry = archive.by_index(i).map_err(|e| Error::ZipError(e))?;
-        if entry.name().map_err(|e| Error::ZipError(e))?.starts_with("META-INF/") { continue; }
+        let mut entry = archive.by_index(i)?;
+        if entry.name()?.starts_with("META-INF/") { continue; }
 
         let Some(rel) = entry.enclosed_name() else {
             continue;
@@ -403,20 +444,20 @@ fn extract_jar(jar: &Path, dir: &Path) -> Result<(), Error> {
         let out = dir.join(rel);
 
         if entry.is_dir() {
-            std::fs::create_dir_all(&out).map_err(|e| Error::IoError(e))?;
+            std::fs::create_dir_all(&out)?;
             continue;
         }
 
         if let Some(parent) = out.parent() {
-            std::fs::create_dir_all(parent).map_err(|e| Error::IoError(e))?;
+            std::fs::create_dir_all(parent)?;
         }
-        let mut file = std::fs::File::create(&out).map_err(|e| Error::IoError(e))?;
-        std::io::copy(&mut entry, &mut file).map_err(|e| Error::IoError(e))?;
+        let mut file = std::fs::File::create(&out)?;
+        std::io::copy(&mut entry, &mut file)?;
         
         #[cfg(unix)]
         if let Some(mode) = entry.unix_mode() {
             use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(&out, fs::Permissions::from_mode(mode)).map_err(|e| Error::IoError(e))?;
+            std::fs::set_permissions(&out, fs::Permissions::from_mode(mode))?;
         }
     }
     Ok(())

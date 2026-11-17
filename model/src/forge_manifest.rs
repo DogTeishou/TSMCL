@@ -2,8 +2,6 @@ use std::collections::HashMap;
 use serde::Deserialize;
 
 use crate::{Libraries, processor::Processor};
-
-pub type Data = HashMap<String, Patched>;
     
 #[derive(Deserialize)]
 pub struct Patched {
@@ -15,9 +13,7 @@ pub struct Patched {
 pub struct ForgeInstallProfile {
     pub spec: u32,
     pub processors: Option<Vec<Processor>>,
-    #[serde(rename = "serverJarPath")]
-    pub server_jar_path: String,
-    pub data: Option<Data>,
+    pub data: Option<HashMap<String, Patched>>,
     pub libraries: Libraries,
 }
 

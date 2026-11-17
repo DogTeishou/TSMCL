@@ -5,14 +5,14 @@ use crate::rule::Rules;
 
 pub type Libraries = Vec<Library>;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(untagged)]
 pub enum Library {
     Normal(NormalLibrary),
     Fabric(FabricLibrary),
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct FabricLibrary {
     pub name: String,
     pub url: String,
@@ -28,7 +28,7 @@ pub struct FabricLibrary {
     pub size: Option<u64>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct NormalLibrary {
     pub name: String,
     pub downloads: Download,
@@ -40,12 +40,12 @@ pub struct NormalLibrary {
     pub extract: Option<Extract>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Extract {
     pub exclude: Vec<String>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Download {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub artifact: Option<DownloadItem>,
@@ -53,7 +53,7 @@ pub struct Download {
     pub classifiers: Option<HashMap<String, DownloadItem>>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct DownloadItem {
     pub path: String,
     pub sha1: String,

@@ -48,9 +48,6 @@ impl Worker {
 
     async fn download(&self, task: Task) -> Result<(), Error> {
         let resp = self.client.get(task.url).send().await?;
-        if task.size.is_some_and(|size| size != resp.content_length().unwrap_or(0)) {
-            return Err(Error::InvalidSize);
-        }
         let stream = tokio_util::io::StreamReader::new(resp.bytes_stream().map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e)));
         let mut reader = tokio::io::BufReader::new(stream);
         if let Some(parent) = task.path.parent() {

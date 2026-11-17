@@ -50,4 +50,20 @@ impl Source {
             }
         }
     }
+
+    pub fn get_fabric_url<'a>(&self, url: &'a str) -> &'a str {
+        match self {
+            Source::Official => {
+                url
+            }
+        }
+    }
+
+    pub fn get_quilt_url<'a>(&self, url: &'a str) -> &'a str {
+        match self {
+            Source::Official => {
+                url
+            }
+        }
+    }
 }
