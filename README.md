@@ -1,3 +1,1 @@
-# Teishou's Minecraft Launcher Core
-
-This library is about how launch minecraft
+# Teishou's Minecraft Launcher
