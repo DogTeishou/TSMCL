@@ -4,7 +4,7 @@ use crate::argument::Arguments;
 use crate::asset::AssetsIndex;
 use crate::library::Libraries;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Version {
     #[serde(rename = "minecraftArguments", skip_serializing_if = "Option::is_none")]
     pub minecraft_arguments: Option<String>,
@@ -41,14 +41,14 @@ pub struct JavaVersion {
     pub major_version: u32,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct MainJar {
     pub sha1: String,
     pub size: u64,
     pub url: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct LoggingClient {
     pub argument: String,
     pub file: LoggingFile,
@@ -56,44 +56,10 @@ pub struct LoggingClient {
     pub type_: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct LoggingFile {
     pub id: String,
     pub sha1: String,
     pub size: usize,
     pub url: String,
-}
-
-impl Version {
-    pub fn join(&mut self, version: Version) {
-        if let Some(m_mc_args) = &self.minecraft_arguments {
-            if let Some(mc_args) = &version.minecraft_arguments {
-                self.minecraft_arguments = Some(format!("{} {}", m_mc_args, mc_args));
-            }
-        }
-
-        let arguments = version.arguments;
-        if let Some(m_args) = &mut self.arguments {
-            if let Some(args) = arguments  {
-                for arg in args.jvm {
-                    m_args.jvm.push(arg);
-                }
-                for arg in args.game {
-                    m_args.game.push(arg);
-                }
-                if let Some(default) = args.default_user_jvm {
-                    if let Some(m_default) = &mut m_args.default_user_jvm {
-                        m_default.extend(default);
-                    }
-                }
-            }
-        }
-
-        let libraries = version.libraries;
-        for lib in libraries.into_iter() {
-            self.libraries.push(lib);
-        }
-
-        self.main_class = version.main_class;
-    }
 }

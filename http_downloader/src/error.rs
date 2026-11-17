@@ -8,8 +8,6 @@ pub enum Error {
     HttpError(#[from] reqwest::Error),
     #[error("Not implemented")]
     NotImplemented,
-    #[error("Invalid size")]
-    InvalidSize,
     #[error("Invalid SHA-1 hash")]
     InvalidSha1,
     #[error("Worker panic")]

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use crate::{Allowed, rule::Rules};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Arguments {
     pub jvm: Vec<Argument>,
     pub game: Vec<Argument>,
@@ -9,21 +9,21 @@ pub struct Arguments {
     pub default_user_jvm: Option<Vec<Argument>>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(untagged)]
 pub enum Argument {
     Plain(String),
     Conditional(ConditionalArgument),
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct ConditionalArgument {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rules: Option<Rules>,
     pub value: ArgumentValue,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(untagged)]
 pub enum ArgumentValue {
     Single(String),

@@ -4,7 +4,6 @@ members = [
     "download",
     "http_downloader",
     "lauch",
-    "main",
     "model", 
     "parse",
 ]

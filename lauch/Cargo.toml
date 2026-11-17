@@ -11,3 +11,8 @@ zip = "9.0.5"
 auth = { path = "../auth" }
 model = { path = "../model" }
 parse = { path = "../parse" }
+
+[dev-dependencies]
+download = { path = "../download" }
+http_downloader = { path = "../http_downloader" }
+tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread"] }

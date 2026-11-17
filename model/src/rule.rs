@@ -6,7 +6,7 @@ use crate::Allowed;
 pub type Rules = Vec<Rule>;
 pub type Features = HashMap<String, bool>;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Rule {
     pub action: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -15,7 +15,7 @@ pub struct Rule {
     pub features: Option<Features>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Os {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
