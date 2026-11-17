@@ -1,5 +1,5 @@
 [package]
-name = "lauch"
+name = "launch"
 edition = "2024"
 version.workspace = true
 
