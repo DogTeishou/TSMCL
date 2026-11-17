@@ -1,5 +1,6 @@
 use model::{forge::ForgeVersion, forge_manifest::{ForgeInstallProfile, ForgeMetadata, ForgeRecommended}};
 
+
 use crate::Parse;
 
 impl Parse<&str> for ForgeMetadata {
