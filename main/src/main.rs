@@ -22,8 +22,14 @@ async fn main() {
         .run(|cx| {
             gpui_kit::init(cx);
 
-            let bounds = Bounds::centered(None, size(px(800.0), px(600.0)), cx);
-            
+            let display = cx.primary_display().expect("Can not find display");
+            let screen_size = display.bounds().size;
+            let window_size = size(
+                screen_size.width * 0.42,
+                screen_size.height * 0.48,
+            );
+            let bounds = Bounds::centered(None, window_size, cx);
+                       
             open_window(WindowOptions {
                 window_bounds: Some(WindowBounds::Windowed(bounds)),
                 window_min_size: Some(size(px(400.0), px(300.0))),
