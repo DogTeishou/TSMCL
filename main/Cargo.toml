@@ -15,4 +15,4 @@ launch = { path = "../launch" }
 download = { path = "../download" }
 model = { path = "../model" }
 parse = { path = "../parse" }
-auth = { version = "0.0.5-alpha", path = "../auth" }
+auth = { version = "0.0.6-alpha", path = "../auth" }
