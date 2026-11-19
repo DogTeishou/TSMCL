@@ -11,7 +11,7 @@ use parse::Parse;
 use zip::ZipArchive;
 
 use crate::LAUNCHER_VERSION;
-use crate::langauge::Lang;
+use crate::language::Lang;
 use crate::error::Error;
 
 pub struct Launcher {
@@ -133,11 +133,11 @@ impl Launcher {
 
         let mut vec: Vec<String> = vec.iter().map(|v| {
             let mut v = v.clone();
-            if v.contains("xuid") && !self.player.is_online {
+            if v.contains("xuid") && self.player.x_uid.is_none() {
                 v = String::new();
-            } else if v.contains("clientid") && !self.player.is_online {
+            } else if v.contains("clientid") && self.player.client_id.is_none() {
                 v = String::new();
-            } else if v.contains("clientid") && !self.player.is_online {
+            } else if v.contains("clientid") && self.player.client_id.is_none() {
                 v = String::new();
             }
             let v = self.replace_jvm(&v, &classpath);
@@ -281,13 +281,13 @@ impl Launcher {
         hash_map.insert("${version_type}".to_string(), format!("TSMCL: {}", LAUNCHER_VERSION));
         hash_map.insert(
             "${user_type}".to_string(),
-            if self.player.is_online { "msa" } else { "legacy" }.to_string(),
+            "msa".to_string(),
         );
         
-        if let Some(client_id) = self.player.client_id.clone() && self.player.is_online {
+        if let Some(client_id) = self.player.client_id.clone() {
             hash_map.insert("${clientid}".to_string(), client_id);
         }
-        if let Some(x_uid) = self.player.x_uid.clone() && self.player.is_online {
+        if let Some(x_uid) = self.player.x_uid.clone() {
             hash_map.insert("${auth_xuid}".to_string(), x_uid);
         }
         if let Some(width) = self.width {
@@ -329,11 +329,7 @@ impl Launcher {
         hash_map.insert("${assets_index_name}", version.assets.clone());
         hash_map.insert("${auth_uuid}", self.player.uuid.clone());
         hash_map.insert("${auth_access_token}", self.player.access_token.clone());
-        if self.player.is_online {
-            hash_map.insert("${user_type}", "msa".to_string());
-        } else {
-            hash_map.insert("${user_type}", "legacy".to_string());
-        }
+        hash_map.insert("${user_type}", "msa".to_string());
         hash_map.insert("${version_type}", format!("TSMCL: {}", LAUNCHER_VERSION));
 
         for (key, value) in hash_map {

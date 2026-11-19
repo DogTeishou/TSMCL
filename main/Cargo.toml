@@ -2,6 +2,10 @@
 name = "main"
 edition = "2024"
 version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description.workspace = true
 
 [dependencies]
 tokio = { version = "1.54.1", features = ["full"] }
@@ -11,3 +15,4 @@ launch = { path = "../launch" }
 download = { path = "../download" }
 model = { path = "../model" }
 parse = { path = "../parse" }
+auth = { version = "0.0.5-alpha", path = "../auth" }
