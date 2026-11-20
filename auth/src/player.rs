@@ -116,8 +116,13 @@ impl Player {
 mod tests {
     use std::path::Path;
     use arboard::Clipboard;
+    use crate::get_client_id;
     use crate::microsoft::DeviceCodeResponse;
     use crate::player::Player;
+    #[test]
+    fn client_id() {
+        println!("client_id: {}", get_client_id().unwrap());
+    }
 
     #[tokio::test]
     async fn test_new() -> Result<(), Box<dyn std::error::Error>> {

@@ -1,9 +1,11 @@
-name: Release Rust Binary
+name: Build Binary
 
 on:
   push:
     tags:
-      - 'v*' # 推送如 v1.0.0 标签时触发
+      - 'v*'
+      - 'v*-alpha'
+      - 'v*-beta'
 
 permissions:
   contents: write # 允许创建和上传 GitHub Release
@@ -20,12 +22,8 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             use_cross: false
-          # Linux x86_64 (musl 静态链接，兼容性最佳)
+          # Linux x86_64 (musl)
           - target: x86_64-unknown-linux-musl
-            os: ubuntu-latest
-            use_cross: true
-          # Linux ARM64
-          - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
             use_cross: true
           # macOS Apple Silicon (M1/M2/M3/M4)
@@ -67,7 +65,7 @@ jobs:
 
       - name: Build binary
         env:
-          TSMCL_CLIENT_ID: ${{ vars.TSMCL_CLIENT_ID }}
+          TSMCL_CLIENT_ID: ${{ vars['TSMCL_CLIENT_ID'] }}
         run: |
           if [ "${{ matrix.use_cross }}" == "true" ]; then
             cross build --release --target ${{ matrix.target }} -p main
